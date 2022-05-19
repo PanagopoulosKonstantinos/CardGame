@@ -1,5 +1,6 @@
 import random
 
+
 class Card: # κλάση τραπουλόχαρτο
 
     def __init__(self, value, symbol): # H __init__ κατασκευάζει τα αντικείμενα τραπουλόχαρτα
@@ -66,3 +67,39 @@ class Cards:
     def __format__(self, format_spec):
         return  f'{str(self)}:{format}'
 
+    def d_level(self): # Μέθοδος που ανάλογα με το επίπεδο δυσκολίας εμφανίζει τον απαρέτειτο
+        while True:
+            try:
+                level = int(input('Παρακαλώ επιλέξτε επίπεδο:\n1)Εύκολο\n2)Μέτριας Δυσκολίας\n3)Δύσκολο\n---> '))
+                if level == 1:
+                    self.closed_cards(level,4)
+                    break
+                elif level == 2:
+                    self.closed_cards(level,10)
+                    break
+                elif level ==3:
+                    self.closed_cards(level,13)
+                    break
+            except ValueError:print()
+
+    def closed_cards(self, level,number):
+        for i in self.symbols:  # Κατασκευάστρια μέθοδο τράπουλας
+            if level == 1:
+                for j in self.values[9:]:
+                    self.full_cards.append(Card(j, i))
+            if level == 2:
+                for j in self.c.values[:10]:
+                    self.full_cards.append(Card(j, i))
+            if level == 3:
+                for j in Cards.values:
+                    self.full_cards.append(Card(j, i))
+        self.number = number
+        self.pie()
+        char=''
+        counter = 0
+        for i,j in enumerate(self.full_cards):
+            char = char + str(i+1) + ' '
+            counter += 1
+            if counter % number == 0:
+                char = char + '\n'
+        print(char)

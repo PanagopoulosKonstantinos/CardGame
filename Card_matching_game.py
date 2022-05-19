@@ -1,4 +1,3 @@
-
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog
 import cards
@@ -16,7 +15,7 @@ class CardImages():
         self.num_sprintes = 13  # Διαδοχικός αριθμός εικόνων
         self.last_img = None
         line = 0
-        for x in "sdhc":
+        for x in ['♣', '♦','♥','♠' ]:
             CardImages.images[x] = [self.subimage(self.card_width * i, line, self.card_width * (i + 1),self.card_height + line) for i in range(self.num_sprintes)]
             line += self.card_height
         CardImages.images["b"] = self.subimage(0, line, self.card_width, self.card_height + line)
@@ -29,7 +28,7 @@ class CardImages():
 
     def showimage(self, canvas, x, y, symbol, value):
         self.last_img = canvas.create_image(x, y, image=self.images[symbol][value], anchor="nw")
-
+            #Το anchor το ορίζουμε με nw ώστε οι συντεταγμένες των φύλλων να καθορίζονται από εμάς
 
 class CardGameApp():
     ''' Κλάση η οποία κατασκευάζει το βασικό περιβάλλον'''
@@ -38,18 +37,17 @@ class CardGameApp():
         self.root = root
         self.root.title("Παιχνίδι μνήμης")  # τίτλος Κεντρικού παράθυρου
         self.root.resizable(False, False)  # Μέθοδος με την οποία ορίζουμε τα αυστηρά πλαίσια
+        self.board_width, self.board_height = 1400, 800
         # Πρώτο πλαίσιο Frame
         self.c = cards.Cards()
         self.run = False
         self.table = []
-
         self.top_font = 'Courier 20'
         self._elapsedtime = 0.0
         self.f = tk.Frame(self.root)  # Δημιουργία αντικειμένου Frame πάνω στο οποίο θα τοποθετηθούν τα χαρτιά της\
         # της τράπουλας καθώς επίσης και κάποια άλλα Frame όπου στα οποία θα τοποθετήσουμε τα widgets\
         # Το πρώτο όρισμα μας δείχνει που ανήκει ιεραρχικά ένα αντικείμενο
         self.f.pack(expand=True, fill="both")  # μηχανή γεωμετρίας pack()
-        self.board_width, self.board_height = 1400, 800
         self.cards = CardImages()
         self.create_widgets()
 
@@ -114,8 +112,9 @@ class CardGameApp():
         self._elapsedtime = time.time() - self._start
 
     def eazy_level(self):
-        count2 = 123
-        for symbol in "sdhc":
+        self.canvas.delete("all")
+        count2 = 123 # θέση σε px πάνω στον καμβά όπου αρχίζει να γίνεται ο σχεδιασμός των φύλλων
+        for symbol in ['♣', '♦','♥','♠' ]:
             count1 = 158
             for i in range(9, 13):
                 x, y = (count1, count2)
@@ -124,8 +123,9 @@ class CardGameApp():
             count2 += self.cards.card_height
 
     def medium_level(self):
+        self.canvas.delete("all")
         count2 = 123
-        for symbol in "sdhc":
+        for symbol in ['♣', '♦','♥','♠' ]:
             count1 = 158
             for i in range(10):
                 x, y = (count1, count2)
@@ -134,8 +134,9 @@ class CardGameApp():
             count2 += self.cards.card_height
 
     def hard_level(self):
+        self.canvas.delete("all")
         count2 = 123
-        for symbol in "sdhc":
+        for symbol in ['♣', '♦','♥','♠' ]:
             count1 = 158
             for i in range(13):
                 x, y = (count1, count2)

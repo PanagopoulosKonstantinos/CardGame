@@ -135,7 +135,7 @@ class Game:
             for number in range(self.n_players):
                 self.players.append(Player(self.c,parametros=True))  # Δημιουργία λίστας στην οποία προσθέτουμε για στοιχεία αντικείμενα της κλάσης Players
         self.show_players()
-        self.d_level()
+        self.c.d_level()
         self.play_game()
 
     def number_of_players(self):# ζητάει από τον χρήστη τον αριθμό παικτών
@@ -150,43 +150,6 @@ class Game:
         for player in sorted(self.players, key=lambda x: x.name):
             print(player.name, end = ',')
         print(']')
-
-    def d_level(self):
-        while True:
-            try:
-                level = int(input('Παρακαλώ επιλέξτε επίπεδο:\n1)Εύκολο\n2)Μέτριας Δυσκολίας\n3)Δύσκολο\n---> '))
-                if level == 1:
-                    self.closed_cards(level,4)
-                    break
-                elif level == 2:
-                    self.closed_cards(level,10)
-                    break
-                elif level ==3:
-                    self.closed_cards(level,13)
-                    break
-            except ValueError:print()
-
-    def closed_cards(self, level,number):
-        for i in self.c.symbols:  # Κατασκευάστρια μέθοδο τράπουλας
-            if level == 1:
-                for j in self.c.values[9:]:
-                    self.c.full_cards.append(Card(j, i))
-            if level == 2:
-                for j in self.c.values[:10]:
-                    self.c.full_cards.append(Card(j, i))
-            if level == 3:
-                for j in Cards.values:
-                    self.c.full_cards.append(Card(j, i))
-        self.c.number = number
-        self.c.pie()
-        char=''
-        counter = 0
-        for i,j in enumerate(self.c.full_cards):
-            char = char + str(i+1) + ' '
-            counter += 1
-            if counter % number == 0:
-                char = char + '\n'
-        print(char)
 
     def play_game(self):  # καλεί διαδοχικά τους παίκτες να παίξουν και αποφασίζει ποιος νίκησε
         self.run = True
