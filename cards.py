@@ -67,7 +67,7 @@ class Cards:
     def __format__(self, format_spec):
         return  f'{str(self)}:{format}'
 
-    def d_level(self): # Μέθοδος που ανάλογα με το επίπεδο δυσκολίας εμφανίζει τον απαρέτειτο
+    def d_level(self): # Μέθοδος που ανάλογα με το επίπεδο δυσκολίας εμφανίζει διαφορετικό αριθμό φύλλων
         while True:
             try:
                 level = int(input('Παρακαλώ επιλέξτε επίπεδο:\n1)Εύκολο\n2)Μέτριας Δυσκολίας\n3)Δύσκολο\n---> '))
