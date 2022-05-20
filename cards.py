@@ -33,6 +33,7 @@ class Cards:
         self.saw_cards = {} # Λεξικό το οποίο περιέχει για κλειδιά την θέση του
                             # χαρτιού που άνοιξε και τιμή τα χαρακτηριστικά του
         self.number = 13
+        self.char = ""
 
     def pie(self): # Μέθοδος ανακατέματος τράπουλας
         random.shuffle(self.full_cards) # καλούμε τη μέθοδο shuffle της κλάσης random με όρισμα self.full_deck
@@ -52,7 +53,7 @@ class Cards:
                 self.saw_cards.pop(i)
 
         for key , value in self.saw_cards.items():
-            print(key,value,end="\n")
+            print(key,value )
 
     def __str__(self): # Ειδική μέθοδος η οποία μας επιστρέφει την τράπουλα σε πίνακα 4x13
         c = ''
@@ -85,21 +86,24 @@ class Cards:
     def closed_cards(self, level,number):
         for i in self.symbols:  # Κατασκευάστρια μέθοδο τράπουλας
             if level == 1:
-                for j in self.values[9:]:
+                for j in Cards.values[9:]:
                     self.full_cards.append(Card(j, i))
             if level == 2:
-                for j in self.c.values[:10]:
+                for j in Cards.values[:10]:
                     self.full_cards.append(Card(j, i))
             if level == 3:
                 for j in Cards.values:
                     self.full_cards.append(Card(j, i))
         self.number = number
         self.pie()
-        char=''
         counter = 0
         for i,j in enumerate(self.full_cards):
-            char = char + str(i+1) + ' '
+            self.char = self.char + str(i+1) + ' '
             counter += 1
             if counter % number == 0:
-                char = char + '\n'
-        print(char)
+                self.char = self.char + '\n'
+
+    def open_cards(self):
+        for value, card in enumerate(self.full_cards):
+            if card in self.collected_cards:
+                print(value+1,card)

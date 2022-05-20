@@ -17,7 +17,7 @@ class Player():
         return self.name,self.points
 
     def plays(self):
-        print(self.cards)
+        print(self.cards.char)
         card1 = int(int(input("Παρακαλώ τραβήχτε ένα φύλλο: ")) - 1)
         if self.cards.full_cards[card1] in self.cards.collected_cards:
             print("Είναι ήδη ανοιχτό")
@@ -36,37 +36,37 @@ class Player():
             print("Παίζεται ξανά")
             if len(self.cards.collected_cards) < len(self.cards.full_cards):
                 self.plays()
-            else:
-                return
-        if self.cards.full_cards[card1].value == "Q" and self.cards.full_cards[card2].value == "K" or \
+        elif self.cards.full_cards[card1].value == "Q" and self.cards.full_cards[card2].value == "K" or \
                 self.cards.full_cards[card2].value == "Q" and self.cards.full_cards[card1].value == "K":
             card3 = int(int(input("Παρακαλώ τραβήχτε ένα επιπλέον τυχαίο φύλλο: ")) - 1)
             if self.cards.full_cards[card3] in self.cards.collected_cards:
                 print("Είναι ήδη ανοιχτό")
-            if self.cards.full_cards[card1].value == self.cards.full_cards[card3].value:
+            elif self.cards.full_cards[card1].value == self.cards.full_cards[card3].value:
                 self.points += self.calculate_value(self.cards.full_cards[card1].value)
                 self.matched_card(card1, card3)
                 print(f"Συνολική βαθμολογία: {self.points}")
-                return
-            if self.cards.full_cards[card2].value == self.cards.full_cards[card3].value:
+            elif self.cards.full_cards[card2].value == self.cards.full_cards[card3].value:
                 self.points += self.calculate_value(self.cards.full_cards[card3].value)
                 self.matched_card(card2, card3)
                 print(f"Συνολική βαθμολογία: {self.points}")
-                return
+            else:
+                print("Δυστυχώς Χάσατε την σειρά σας")
+                print("Τα φύλλα που έχουν ανοιχτεί χωρίς να έχει γίνει matched είναι :   ")
+                self.cards.saw(card1, card2)
+                self.cards.open_cards()
         elif self.cards.full_cards[card1].value == "K" and self.cards.full_cards[card2].value == "K":
             self.points += self.calculate_value(self.cards.full_cards[card1].value)
             self.matched_card(card1, card2)
             print(f"Συνολική βαθμολογία: {self.points}")
-            return
         elif self.cards.full_cards[card1].value == self.cards.full_cards[card2].value:
             self.points += self.calculate_value(self.cards.full_cards[card1].value)
             self.matched_card(card1, card2)
             print(f"Συνολική βαθμολογία: {self.points}")
-            return
         else:
+            print("Δυστυχώς Χάσατε την σειρά σας")
+            print("Τα φύλλα που έχουν ανοιχτεί χωρίς να έχει γίνει matched είναι :   ")
             self.cards.saw(card1, card2)
-        print("Δυστυχώς Χάσατε την σειρά σας")
-        return
+        self.cards.open_cards()
 
     def calculate_value(self, card):
         if card.isdigit():
@@ -85,7 +85,6 @@ class Player():
             print(c1,c2)
         else:
             print("Cards Empty")
-
 
 class ComputerPlay(Player):
 
@@ -145,9 +144,9 @@ class Game:
             if number.isdigit():
                 return int(number)
 
-    def show_players(self): # μας τυπώνει τους παίκτες
+    def show_players(self): # μας τυπώνει ταξινομημένα τα ονόματα των παιχτών που καταχωρήσαμε
         print('Παίκτες: [', end ='')
-        for player in sorted(self.players, key=lambda x: x.name):
+        for player in sorted(self.players, key=lambda x: x.name): # Κάνουμε χρήση lambda ώστε η ταξινόμηση να γίνει στο όνομα
             print(player.name, end = ',')
         print(']')
 
@@ -156,8 +155,7 @@ class Game:
         while self.run:
             if len(self.c.collected_cards)<len(self.c.full_cards):
                 for p in range(len(self.players)):
-                    print(50 * '*', '\nΠαίζει ο παίκτης...', self.players[p].name)
-                    print(p)
+                    print(50 * '*', '\nΠαίζει ο παίκτης...', self.players[p].name,"\n")
                     if self.players[p].name =="PcMaster":
                         self.players[p].computer_plays()
                     else:
