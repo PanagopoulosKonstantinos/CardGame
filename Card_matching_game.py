@@ -2,6 +2,46 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog
 import cards
 import time
+from game import Game
+import random
+
+
+class GUICard():
+
+    tableCards = {}
+
+    def __init__(self,card,canvas):
+        self.canvas = canvas
+        self.value = card.value
+        self.symbol = card.symbol
+        self.position = None
+        self.image = None
+        GUICard.tableCards = self
+
+    def _open_image(self):
+        if self.face:
+            return CardImages.images[self.symbol][cards.Cards.values.index(self.value)]
+        else:
+            return CardImages.images['b']
+
+    def set_face(self,face):
+        if self.position and face != self.face:
+            self.face = face
+            self.canvas.itemconfig(self.image,image = self._open_image())
+        else:
+            self.face = face
+
+    def set_position(self, new_position):
+        if not self.position: self.position = new_position
+        if not self.image:
+            self.image = self.canvas.create_image(*self.position, image =  self._open_image())
+        self.canvas.itemconfig(self.image, anchor='nw')
+
+    def __str__(self):
+        out = self.value + self.symbol
+        if self.position:
+            out += '['+str(self.position[0])+','+str(self.position[1])+']'
+        return out
 
 
 class CardImages():
@@ -30,24 +70,38 @@ class CardImages():
         self.last_img = canvas.create_image(x, y, image=self.images[symbol][value], anchor="nw")
             #Το anchor το ορίζουμε με nw ώστε οι συντεταγμένες των φύλλων να καθορίζονται από εμάς
 
-class CardGameApp():
+
+class GUI():
+    '''κλάση με τις παραμέτρους του γραφικού περιβάλλοντος'''
+    board_width, board_height = 1400, 800  # διαστάσεις καμβά
+    card_width, card_height = 79, 123  # διαστάσεις τραπουλόχαρτου
+    padx, pady = 50, 50  # κενό μεταξύ του καμβά και ενεργού περιοχής
+    deck = (800, 230)
+    #περιοχή τράπουλας
+    deck_of_cards_area = (deck[0], deck[1], deck[0] + card_width, deck[1] + card_height)
+    @staticmethod
+    def in_area(point, rect):
+        if point[0]>= rect[0] and point[0] <= rect[2] \
+            and point[1] >= rect[1] and point[1] <= rect[3]:
+            return True
+        else:
+            return False
+
+
+class CardGameApp(Game,GUI):
     ''' Κλάση η οποία κατασκευάζει το βασικό περιβάλλον'''
 
     def __init__(self, root):
         self.root = root
         self.root.title("Παιχνίδι μνήμης")  # τίτλος Κεντρικού παράθυρου
         self.root.resizable(False, False)  # Μέθοδος με την οποία ορίζουμε τα αυστηρά πλαίσια
-        self.board_width, self.board_height = 1400, 800
         # Πρώτο πλαίσιο Frame
+        self.f = tk.Frame(root)
+        self.f.pack(expand=True, fill="both")  # μηχανή γεωμετρίας pack()
         self.c = cards.Cards()
         self.run = False
-        self.table = []
         self.top_font = 'Courier 20'
         self._elapsedtime = 0.0
-        self.f = tk.Frame(self.root)  # Δημιουργία αντικειμένου Frame πάνω στο οποίο θα τοποθετηθούν τα χαρτιά της\
-        # της τράπουλας καθώς επίσης και κάποια άλλα Frame όπου στα οποία θα τοποθετήσουμε τα widgets\
-        # Το πρώτο όρισμα μας δείχνει που ανήκει ιεραρχικά ένα αντικείμενο
-        self.f.pack(expand=True, fill="both")  # μηχανή γεωμετρίας pack()
         self.cards = CardImages()
         self.create_widgets()
 
@@ -76,11 +130,12 @@ class CardGameApp():
         self.submenu.add_command(label="Επίπεδο 3", command=self.hard_level)
         self.menu.add_command(label="Τέλος παιχνιδιού", command=self.buttonPushed)
         self.mb.config(menu=self.menu)
-        self.f2 = tk.Frame(self.f)
+        self.f2 = tk.Frame(self.f) # Δημιουργία αντικειμένου Frame πάνω στο οποίο θα τοποθετηθούν τα χαρτιά της\
+        # της τράπουλας καθώς επίσης και κάποια άλλα Frame όπου στα οποία θα τοποθετήσουμε τα widgets\
+        # Το πρώτο όρισμα μας δείχνει που ανήκει ιεραρχικά ένα αντικείμενο
         self.f2.pack(expand=True, fill="both")
         self.canvas = tk.Canvas(self.f2, width=1400, height=800, bg="darkgreen")
         self.canvas.pack(side="left", fill="both")
-
 
     def start_game(self):
         self.run = True
@@ -112,7 +167,13 @@ class CardGameApp():
         self._elapsedtime = time.time() - self._start
 
     def eazy_level(self):
+        self.c.pie()
         self.canvas.delete("all")
+        for card in self.c.full_cards:
+            gui = GUICard(card, self.canvas)
+            gui.set_face(False)
+            gui.set_position(GUI.deck)
+        self.run = True
         count2 = 123 # θέση σε px πάνω στον καμβά όπου αρχίζει να γίνεται ο σχεδιασμός των φύλλων
         for symbol in ['♣', '♦','♥','♠' ]:
             count1 = 158
@@ -134,7 +195,12 @@ class CardGameApp():
             count2 += self.cards.card_height
 
     def hard_level(self):
+        self.c.pie()
         self.canvas.delete("all")
+        for card in self.c.full_cards:
+            gui = GUICard(card, self.canvas)
+            gui.set_face(False)
+            gui.set_position(GUI.deck)
         count2 = 123
         for symbol in ['♣', '♦','♥','♠' ]:
             count1 = 158
@@ -171,7 +237,7 @@ class CardGameApp():
 
 
 root = tk.Tk()  # Δημιουργία αντικειμένου που είναι το βασικό παράθυρο
-CardGameApp(root)
+CardGameApp(root) # Καλούμε την κλάση CardGameApp με όρισμα την root
 root.mainloop()  # με τη μέθοδο mainloop ξεκινάμε έναν βρόχο επεξεργασίας γεγονότων για το αντικείμενο root
 
 # άμα θέλουμε να εισάλουμε ένα αντικείμενο με την κλάση Label(που θα μπει το παράθυρο, κειμενο γραμματοσειρά)

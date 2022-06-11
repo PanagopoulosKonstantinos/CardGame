@@ -42,8 +42,11 @@ class Cards:
         self.full_cards = self.full_cards + self.collected_cards
         self.collected_cards = []
 
-    def saw(self,card1,card2):
-        for saw_card in card1,card2:
+    def saw(self,card1,card2,card3 = None): # Μέθοδος με την οποία παίρνουμε τα φύλλα που έχει
+        # επιλέξει ο παίχτης και ελέγχει εάν τα
+        for saw_card in card1,card2,card3:
+            if saw_card is None:
+                continue
             if self.full_cards[saw_card] in self.collected_cards:
                 continue
             else:
