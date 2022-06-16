@@ -3,7 +3,9 @@ import tkinter as tk
 import time
 from tkinter import filedialog, messagebox, simpledialog
 from game import Game , Player
+import sqlite3
 
+global card_1, card_2
 
 class Card: # κλάση τραπουλόχαρτο
 
@@ -175,41 +177,98 @@ class GUICard():
 
 
 class Human_Player():
+    players = {}
 
-    def __init__(self,canvas,cards, name="", points=0, parametros = False):
+    @staticmethod
+    def create_database():  # Δημιουργία βάσης στην περίπτωση που δεν υπάρχει
+        try:
+            connnection = sqlite3.connect("CardGame_database.db")
+            with connnection:
+                cursor = connnection.cursor()
+                sql = 'CREATE TABLE players (person_id INTEGER PRIMARY KEY AUTOINCREMENT, name text ,points integer);'
+                cursor.execute(sql)
+                return True
+        except sqlite3.Error:
+            return False
+
+    @staticmethod
+    def players_number():  # μέθοδος με την οποία μετράμε το πλήθος των παικτών
+        try:
+            connection = sqlite3.connect("CardGame_database.db")
+            with connection:
+                cursor = connection.cursor()
+                sql = "SELECT count (*) from players;"  # Συνάρτηση count της sql η οποία μετράει το πλήθος των παιχτών στον πίνακα players
+                cursor.execute(sql)
+                return cursor.fetchone()[0]
+        except sqlite3.Error:
+            return 0
+
+    @staticmethod
+    def show_records():  # Συνάρτηση προβολής των εγγραφών του πίνακα table
+        try:
+            connection = sqlite3.connect(
+                "CardGame_database.db")  # Σύνδεση με τη βάση δεδομένων με τη μέθοδο connect της sqlite3
+            with connection:
+                cursor = connection.cursor()  # ορίζουμε έναν δρομέα ο οποίος εισάγει εντολές στη βάση δεδομένων
+                sql = "SELECT * from players;"
+                cursor.execute(sql)  # ο κέρσορας εκτελεί την εντολή sql
+                records = cursor.fetchall()  # Με τη μέθοδο fetchall επιστρέφουμε όλα τα αποτελέσματα σε μία μεταβλητή
+                for rec in records:  # Με τη δομή επανάληψης εμφανίζουμε όλα τα δεδομένα
+                    print(rec)
+        except sqlite3.Error as er:
+            print(er)
+
+    def __init__(self,canvas,cards, name="", points=0, parametros = False,person_id=None,*kartes):
         Player.count += 1
+        self.create_database()
         if parametros:
-            self.name =  simpledialog.askstring("Title", "Το όνομά του παίχτη {}:".format(Player.count))
+            self.name = simpledialog.askstring("Title", "Το όνομά του παίχτη {}:".format(Player.count))
+        self.person_id = person_id
         self.canvas = canvas
+        self.player_count = Player.count
         self.points = points
+        self.kartes = kartes
+        if parametros:
+            self.insert_records()
         self.c = cards
-        self.points = 0
         self.active = False
         self.play = False
 
+
+
+    def insert_records(self):  # Μέθοδος εισαγωγής παίχτη
+        try:
+            connection = sqlite3.connect("CardGame_database.db")
+            with connection:
+                cursor = connection.cursor()
+                sql = "INSERT INTO players (name,points) VALUES (?,?);"
+                cursor.execute(sql, (self.name,self.points))
+        except sqlite3.Error as er:
+            print(er)
+
+    def set_points(self, points,name):
+        self.points = points
+        try:
+            connection = sqlite3.connect("CardGame_database.db")
+            with connection:
+                cursor = connection.cursor()
+                sql = "UPDATE players set points ='{}' WHERE name = '{}';".format(points, name)
+                cursor.execute(sql)
+        except sqlite3.Error as er:
+            print(er)
+
+    def delete_records(self,person_id):  # Συνάρτηση διαγραφής παίχτη
+        try:
+            connection = sqlite3.connect("CardGame_database.db")
+            with connection:
+                cursor = connection.cursor()
+                sql = "DELETE  FROM players where person_id =='{}';".format(person_id)  # Ερώτημα (query) για τη διαγραφή του μαθητή βάση του κωδικού του από τον πίνακα students
+                cursor.execute(sql) # O κέρσορας εκτελεί την εντολή που καταχωρείται στη μεταβλητή sql
+        except sqlite3.Error as er:
+            print(er)
+
     def __str__(self):
         return self.name,self.points
-
-    def plays(self,active):
-
-        if active:
-            self.canvas.bind('<Button-1>', self.click)
-
-    def click(self, event):
-        if self.canvas.find_withtag('current'):
-            num1 = (self.canvas.find_withtag('current'))
-            print(num1[0])
-            card1 = GUICard.tableCards[self.c.full_cards[num1[0] - 1]]
-            print(card1.value)
-            self.canvas.itemconfig("current", card1.set_face(True))
-            if num1[0] not in self.c.collected_cards:
-                self.c.collected_cards.append(num1[0]-1)
-                if len(self.c.collected_cards) == 2:
-                    card_1 = self.c.collected_cards[0]
-                    card_2 = self.c.collected_cards[1]
-                    self.playing(card_1,card_2)
-                    self.c.collected_cards = []
-        print(self.c.collected_cards)
 
     def playing(self,card1,card2):
         if self.c.full_cards[card1].value == "J" and self.c.full_cards[card2].value == "J":
@@ -247,8 +306,8 @@ class Human_Player():
             self.matched_card(card1, card2)
             print(f"Συνολική βαθμολογία: {self.points}")
         else:
-            self.canvas.itemconfig("current", card1.set_face(False))
-            self.canvas.itemconfig("current", card2.set_face(False))
+            self.canvas.itemconfig("current", self.kartes[0].set_face(False))
+            self.canvas.itemconfig("current", self.kartes[1].set_face(False))
             print("Δυστυχώς Χάσατε την σειρά σας")
             print("Τα φύλλα που έχουν ανοιχτεί χωρίς να έχει γίνει matched είναι :   ")
             self.c.saw(card1, card2)
@@ -281,31 +340,33 @@ class CardGameApp():
 
     def __init__(self, root):
         self.root = root
-        self.root.title("Παιχνίδι μνήμης")  # τίτλος Κεντρικού παράθυρου
+        self.root.title("Παιχνίδι μνήμης vol.1")  # τίτλος Κεντρικού παράθυρου
         self.board_width, self.board_height = 1400, 800  # διαστάσεις καμβά
         self.root.resizable(False, False)  # Μέθοδος με την οποία ορίζουμε τα αυστηρά πλαίσια
-        self.c = Cards()
+        self.c = Cards()# Αντικείμενο Τράπελα
         # Πρώτο πλαίσιο Frame
         self.f = tk.Frame(root)
         self.f.pack(expand=True, fill="both")  # μηχανή γεωμετρίας pack()
-        self.run = False
         self.top_font = 'Courier 20'
         self._elapsedtime = 0.0
         self.n_players = None
         self.players = []
         self.cards = CardImages()
         self.create_widgets()
+        self.kartes = []
 
     def create_widgets(self):
+        # TODO να γίνει ένα widgets που να εμφανίζει σκοπ,ονόματα παιχτών
+
         # Δεύτερο πλαίσιο Frame το οποίο τοποθετείται στο Πρώτο Frame
         self.f1 = tk.Frame(self.f)  # Δημιουργία ενός αντικειμένου τύπου Frame μέσα στο οποίο θα τοποθετήσουμε τα\
         # γραφικά αντικείμενα όπως είναι τα button
         self.f1.pack(fill="x")  # βασικές παραμέτρους της pack (expand , fill, side)
         self.timestr = tk.StringVar()
-        time_display = tk.Label(self.f1, fg="green", bg="black", font="Courier 14", textvariable=self.timestr, width=10)
-        self._set_time(self._elapsedtime)
+        time_display = tk.Label(self.f1, fg="red", bg="black", font="Courier 14", textvariable=self.timestr, width=10)
+        self._set_time(self._elapsedtime)# Αντικείμενο που περιέχει κειμενο
         time_display.pack(side="left", fill='x', expand=False, pady=2, padx=2)
-        self.button_info = tk.Button(self.f1, text='  [ Πληροφορίες ]  ', font="Courier 15", command=self.info, width=10)
+        self.button_info = tk.Button(self.f1, text='  [ Πληροφορίες ]  ', font="Courier 10", command=self.info, width=10)
         self.button_info.pack(side='right', fill='x')
         self.mb = tk.Menubutton(self.f1, text="Menu")  # Δημιουργία ενός menu button
         self.mb.pack(side="left", fill="x")
@@ -324,10 +385,13 @@ class CardGameApp():
         # της τράπουλας καθώς επίσης και κάποια άλλα Frame όπου στα οποία θα τοποθετήσουμε τα widgets\
         # Το πρώτο όρισμα μας δείχνει που ανήκει ιεραρχικά ένα αντικείμενο
         self.f2.pack(expand=True, fill="both")
-        self.canvas = tk.Canvas(self.f2, width=1400, height=800, bg="darkgreen")
+        self.canvas = tk.Canvas(self.f2, width=1400, height=800, bg="darkgreen")# Γραφική κλάση που μας προσφέρει η tkinter
         self.canvas.pack(side="left", fill="both")
+        self.canvas.bind('<Button-1>', self.click)
+# TODO η κλάση Computer_play  η οποία θα μαθαίνει στον υπολογιστή πως θα παίζει
+# TODO τρόπο με τον οποίο θα εμφανίζεται ,σε περίπτωση αποθήκευσης, τρόπο με το οποίο θα ξεκινάει από εκεί που το αποθηκεύσαμε
 
-    def click_face(self, event):
+    def click_face(self, event):#Μέθοδος με την οποία το π
         if self.canvas.find_withtag('current'):
             num = (self.canvas.find_withtag('current'))
             print(num)
@@ -376,11 +440,13 @@ class CardGameApp():
                 count1 += self.cards.card_width
                 k+=1
             count2 += self.cards.card_height
+        self.play_game()
 
     def medium_level(self):
         self.c.d_level(2)
         self.c.pie()
         self.canvas.delete("all")
+        self.ask_numbers()
         self.start_timer()
         k = 0
         count2 = 123 # θέση σε px πάνω στον καμβά όπου αρχίζει να γίνεται ο σχεδιασμός των φύλλων
@@ -399,6 +465,7 @@ class CardGameApp():
         self.c.d_level(3)
         self.c.pie()
         self.canvas.delete("all")
+        self.ask_numbers()
         self.start_timer()
         k = 0
         count2 = 123 # θέση σε px πάνω στον καμβά όπου αρχίζει να γίνεται ο σχεδιασμός των φύλλων
@@ -422,9 +489,8 @@ class CardGameApp():
                 self.players.append(ComputerPlay(self.c))
         else:
             for number in range(self.n_players):
-                self.players.append(Human_Player(self.canvas,self.c,parametros=True))  # Δημιουργία λίστας στην οποία προσθέτουμε για στοιχεία αντικείμενα της κλάσης Players
+                self.players.append(Human_Player(self.canvas,self.c,parametros=True,*self.kartes))  # Δημιουργία λίστας στην οποία προσθέτουμε για στοιχεία αντικείμενα της κλάσης Players
         self.show_players()
-        self.play_game()
 
     def show_players(self): # μας τυπώνει ταξινομημένα τα ονόματα των παιχτών που καταχωρήσαμε
         print('Παίκτες: [', end ='')
@@ -432,19 +498,41 @@ class CardGameApp():
             print(player.name, end = ',')
         print(']')
 
+    def click(self, event):
+        global card_1,card_2
+        if self.canvas.find_withtag('current'):
+            num1 = (self.canvas.find_withtag('current'))
+            print(num1[0])
+            card1 = GUICard.tableCards[self.c.full_cards[num1[0] - 1]]
+            self.kartes.append(card1)
+            print(card1.value)
+            self.canvas.itemconfig("current", card1.set_face(True))
+            if num1[0] not in self.c.collected_cards:
+                self.c.collected_cards.append(num1[0] - 1)
+                if len(self.c.collected_cards) == 2:
+                    card_1 = self.c.collected_cards[0]
+                    card_2 = self.c.collected_cards[1]
+            print(self.kartes,self.c.collected_cards)
+
     def play_game(self):  # καλεί διαδοχικά τους παίκτες να παίξουν και αποφασίζει ποιος νίκησε
         for p in range(len(self.players)):
             print(50 * '*', '\nΠαίζει ο παίκτης...', self.players[p].name,"\n")
-            self.canvas.bind('<Button-1>', self.players[p].click)
-        else:
-            print("Game Over")
-            self.show_winner()
-            self.run = False
+            if self.players[p].name == "PcMaster":
+                self.players[p].computer_plays()
+            else:
+                root.update_idletasks()
+                box = messagebox.showinfo("Σειρά του παίχτη", f"Παίζει ο παίχτης:{self.players[p].name}")
+                self.players[p].playing(card_1,card_2)
+            if p == self.n_players - 1:
+                del p
+            else:
+                print("Game Over")
+                self.show_winner()
+                self.run = False
 
     def show_winner(self):# αποφασίζει ποιος είναι ο νικητής
         for player in sorted(self.players, key=lambda x: x.points):
             print(player.name , player.points)
-
 
     def info(self):
         message = '''
